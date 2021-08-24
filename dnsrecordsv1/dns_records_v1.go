@@ -28,6 +28,8 @@ import (
 	"fmt"
 	"github.com/IBM/go-sdk-core/v4/core"
 	common "github.com/IBM/networking-go-sdk/common"
+	"io"
+	"log"
 	"net/http"
 	"reflect"
 	"time"
@@ -188,6 +190,7 @@ func (dnsRecords *DnsRecordsV1) ListAllDnsRecords(listAllDnsRecordsOptions *List
 func (dnsRecords *DnsRecordsV1) ListAllDnsRecordsWithContext(ctx context.Context, listAllDnsRecordsOptions *ListAllDnsRecordsOptions) (result *ListDnsrecordsResp, response *core.DetailedResponse, err error) {
 	err = core.ValidateStruct(listAllDnsRecordsOptions, "listAllDnsRecordsOptions")
 	if err != nil {
+		log.Println("invalid struct", err)
 		return
 	}
 
@@ -201,6 +204,7 @@ func (dnsRecords *DnsRecordsV1) ListAllDnsRecordsWithContext(ctx context.Context
 	builder.EnableGzipCompression = dnsRecords.GetEnableGzipCompression()
 	_, err = builder.ResolveRequestURL(dnsRecords.Service.Options.URL, `/v1/{crn}/zones/{zone_identifier}/dns_records`, pathParamsMap)
 	if err != nil {
+		log.Println("url resolve failure", err)
 		return
 	}
 
@@ -241,20 +245,24 @@ func (dnsRecords *DnsRecordsV1) ListAllDnsRecordsWithContext(ctx context.Context
 
 	request, err := builder.Build()
 	if err != nil {
+		log.Println("request build failure", err)
 		return
 	}
 
 	var rawResponse map[string]json.RawMessage
 	response, err = dnsRecords.Service.Request(request, &rawResponse)
 	if err != nil {
+		log.Println("request failure", err)
 		return
 	}
 	err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalListDnsrecordsResp)
 	if err != nil {
+		log.Println("unmarshall failure", err)
 		return
 	}
 	response.Result = result
 
+	log.Println(fmt.Sprintf("request successful: %s: %s, %s: %s", "response", response, "err", err))
 	return
 }
 
@@ -268,6 +276,7 @@ func (dnsRecords *DnsRecordsV1) CreateDnsRecord(createDnsRecordOptions *CreateDn
 func (dnsRecords *DnsRecordsV1) CreateDnsRecordWithContext(ctx context.Context, createDnsRecordOptions *CreateDnsRecordOptions) (result *DnsrecordResp, response *core.DetailedResponse, err error) {
 	err = core.ValidateStruct(createDnsRecordOptions, "createDnsRecordOptions")
 	if err != nil {
+		log.Println("invalid struct", err)
 		return
 	}
 
@@ -281,6 +290,7 @@ func (dnsRecords *DnsRecordsV1) CreateDnsRecordWithContext(ctx context.Context, 
 	builder.EnableGzipCompression = dnsRecords.GetEnableGzipCompression()
 	_, err = builder.ResolveRequestURL(dnsRecords.Service.Options.URL, `/v1/{crn}/zones/{zone_identifier}/dns_records`, pathParamsMap)
 	if err != nil {
+		log.Println("url request failure", err)
 		return
 	}
 
@@ -316,25 +326,32 @@ func (dnsRecords *DnsRecordsV1) CreateDnsRecordWithContext(ctx context.Context, 
 	}
 	_, err = builder.SetBodyContentJSON(body)
 	if err != nil {
+		log.Println("json content failure", err)
 		return
 	}
 
 	request, err := builder.Build()
 	if err != nil {
+		log.Println("request build failure", err)
 		return
 	}
 
 	var rawResponse map[string]json.RawMessage
 	response, err = dnsRecords.Service.Request(request, &rawResponse)
 	if err != nil {
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(request.Body)
+		log.Println(fmt.Sprintf("response failure: request: %s\n\nrequest.Body: %s\n\nresponse: %s\n\nerr: %s", request, body, response, err))
 		return
 	}
 	err = core.UnmarshalModel(rawResponse, "", &result, UnmarshalDnsrecordResp)
 	if err != nil {
+		log.Println("unmarshal failure", err)
 		return
 	}
 	response.Result = result
 
+	log.Println(fmt.Sprintf("request successful: response: %s\nerr: %s", response, err))
 	return
 }
 
